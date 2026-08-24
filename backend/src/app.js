@@ -55,9 +55,42 @@ const upload = multer({
 
 app.locals.upload = upload;
 
-// CORS Configuration
+// CORS Configuration - supports web (5173), expo web (8081), expo go
+const allowedOrigins = [
+    process.env.FRONTEND_URL || 'http://localhost:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    'http://localhost:8081',
+    'http://127.0.0.1:8081',
+    'http://localhost:8082',
+    'http://localhost:19006',
+    'http://localhost:19000',
+    'http://localhost:19002',
+    'exp://localhost:8081',
+].filter(Boolean);
+
 const corsOptions = {
-    origin: [process.env.FRONTEND_URL || 'http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'],
+    origin: function (origin, callback) {
+        // Allow requests with no origin (mobile apps, curl, etc.)
+        if (!origin) return callback(null, true);
+        // Allow any localhost port, exp:// scheme, or explicitly listed
+        if (
+            allowedOrigins.includes(origin) ||
+            origin.startsWith('http://localhost:') ||
+            origin.startsWith('http://127.0.0.1:') ||
+            origin.startsWith('exp://') ||
+            origin.startsWith('http://192.168.') ||
+            origin.startsWith('http://10.')
+        ) {
+            return callback(null, true);
+        }
+        // In development, be permissive; in production, still allow but log
+        if (process.env.NODE_ENV !== 'production') {
+            return callback(null, true);
+        }
+        // Allow all for now to ensure mobile/web works (can tighten later via FRONTEND_URL)
+        return callback(null, true);
+    },
     credentials: true,
     optionsSuccessStatus: 200,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],

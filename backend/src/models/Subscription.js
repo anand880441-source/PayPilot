@@ -23,7 +23,7 @@ const subscriptionSchema = new mongoose.Schema({
     },
     
     // Auto-detection metadata
-    detectedSource: { type: String, enum: ['manual', 'gmail', 'plaid', 'csv'], default: 'manual' },
+    detectedSource: { type: String, enum: ['manual', 'gmail', 'plaid', 'csv', 'pdf', 'statement'], default: 'manual' },
     detectionConfidence: { type: Number, min: 0, max: 100 },
     matchedTransactionIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' }],
     

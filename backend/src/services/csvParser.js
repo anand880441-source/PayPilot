@@ -1,5 +1,7 @@
 const fs = require('fs');
+const path = require('path');
 const csv = require('csv-parser');
+const pdfParse = require('pdf-parse');
 
 const parseCSV = (filePath) => {
     return new Promise((resolve, reject) => {
@@ -8,22 +10,20 @@ const parseCSV = (filePath) => {
         fs.createReadStream(filePath)
             .pipe(csv())
             .on('data', (row) => {
-                // Try to detect transaction columns
-                const transaction = {
-                    date: row.Date || row.date || row['Transaction Date'] || row['Posting Date'],
-                    description: row.Description || row.description || row['Merchant Name'] || row['Payee'],
-                    amount: parseFloat(row.Amount || row.amount || row['Debit'] || row['Withdrawal']) || 0,
-                    type: row.Type || row.type || 'debit'
-                };
+                let date = row.Date || row.date || row['Transaction Date'] || row['Posting Date'];
+                let description = row.Description || row.description || row['Merchant Name'] || row['Payee'];
+                let amount = parseFloat(row.Amount || row.amount || row.Debit || row.Withdrawal || row['Debit Amount'] || 0);
                 
-                // Handle credit/negative amounts
-                if (transaction.amount < 0) {
-                    transaction.amount = Math.abs(transaction.amount);
-                    transaction.type = 'credit';
-                }
+                if (amount < 0) amount = Math.abs(amount);
                 
-                if (transaction.date && transaction.description && transaction.amount > 0) {
-                    transactions.push(transaction);
+                if (date && description && amount > 0) {
+                    transactions.push({
+                        date: new Date(date),
+                        merchant: description.trim().substring(0, 100),
+                        amount: amount,
+                        category: 'Uncategorized',
+                        status: 'pending'
+                    });
                 }
             })
             .on('end', () => resolve(transactions))
@@ -32,10 +32,78 @@ const parseCSV = (filePath) => {
 };
 
 const parsePDF = async (filePath) => {
-    // Placeholder - will be implemented with pdf-parse
-    // For MVP, return empty array and suggest CSV
-    console.log('PDF parsing not fully implemented. Please use CSV format.');
-    return [];
+    try {
+        const dataBuffer = fs.readFileSync(filePath);
+        const pdfData = await pdfParse(dataBuffer);
+        const text = pdfData.text || '';
+        const lines = text.split(/\r?\n/);
+        const transactions = [];
+
+        const dateRegex = /(\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4})/;
+
+        for (const rawLine of lines) {
+            const line = rawLine.trim();
+            if (!line) continue;
+            
+            // Skip typical statement headers
+            const lower = line.toLowerCase();
+            if (lower.includes('statement') || lower.includes('account holder') || lower.includes('description') || lower.includes('balance')) {
+                continue;
+            }
+
+            const dateMatch = line.match(dateRegex);
+            if (!dateMatch) continue;
+
+            const dateStr = dateMatch[1];
+            
+            // Extract numeric amounts from the line
+            const amounts = [];
+            let match;
+            const amtRe = /[$€£₹]?\s*([0-9,]+\.\d{2})/g;
+            while ((match = amtRe.exec(line)) !== null) {
+                const num = parseFloat(match[1].replace(/,/g, ''));
+                if (!isNaN(num) && num > 0) amounts.push(num);
+            }
+
+            if (amounts.length === 0) continue;
+            const amount = amounts[amounts.length - 1];
+
+            // Strip date and amount patterns to extract the merchant/description
+            let merchant = line
+                .replace(dateStr, '')
+                .replace(/[$€£₹]?\s*[0-9,]+\.\d{2}/g, '')
+                .replace(/[-|•,]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            if (merchant && amount > 0) {
+                const parsedDate = new Date(dateStr);
+                if (!isNaN(parsedDate.getTime())) {
+                    transactions.push({
+                        date: parsedDate,
+                        merchant: merchant.substring(0, 100),
+                        amount: Math.abs(amount),
+                        category: 'Uncategorized',
+                        status: 'pending'
+                    });
+                }
+            }
+        }
+
+        return transactions;
+    } catch (error) {
+        console.error('PDF parsing error:', error);
+        return [];
+    }
 };
 
-module.exports = { parseCSV, parsePDF };
+const parseStatementFile = async (filePath, originalName = '') => {
+    const isPdf = originalName.toLowerCase().endsWith('.pdf') || filePath.toLowerCase().endsWith('.pdf');
+    if (isPdf) {
+        return await parsePDF(filePath);
+    }
+    return await parseCSV(filePath);
+};
+
+module.exports = { parseCSV, parsePDF, parseStatementFile };
+

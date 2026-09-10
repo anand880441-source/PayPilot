@@ -51,7 +51,7 @@ const detectRecurringTransactions = (transactions) => {
         detected.push({
             merchant: merchant,
             originalMerchant: txns[0].merchant || txns[0].name,
-            amount: avgAmount.toFixed(2),
+            amount: parseFloat(avgAmount.toFixed(2)),
             billingCycle,
             nextRenewalDate,
             confidence: Math.min(Math.round(confidence), 100),

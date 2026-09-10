@@ -1,0 +1,105 @@
+%PDF-1.4
+1 0 obj
+<<
+  /Type /Catalog
+  /Pages 2 0 R
+>>
+endobj
+2 0 obj
+<<
+  /Type /Pages
+  /Kids [3 0 R]
+  /Count 1
+>>
+endobj
+3 0 obj
+<<
+  /Type /Page
+  /Parent 2 0 R
+  /MediaBox [0 0 612 792]
+  /Contents 4 0 R
+  /Resources <<
+    /Font <<
+      /F1 5 0 R
+    >>
+  >>
+>>
+endobj
+4 0 obj
+<<
+  /Length 750
+>>
+stream
+BT
+/F1 16 Tf
+50 740 Td
+(PAYPILOT SAMPLE BANK STATEMENT) Tj
+/F1 10 Tf
+0 -30 Td
+(Account Holder: John Doe       Account Number: **** 4892) Tj
+0 -18 Td
+(Statement Period: 01 Jun 2026 - 10 Sep 2026) Tj
+0 -30 Td
+(Date          Description                     Amount) Tj
+0 -15 Td
+(-------------------------------------------------------------------) Tj
+0 -18 Td
+(2026-06-05    Netflix                         $15.99) Tj
+0 -18 Td
+(2026-06-10    Spotify                         $10.99) Tj
+0 -18 Td
+(2026-06-15    GitHub                          $20.00) Tj
+0 -18 Td
+(2026-06-20    Notion                          $12.00) Tj
+0 -18 Td
+(2026-06-28    AWS Cloud Services              $29.99) Tj
+0 -18 Td
+(2026-07-05    Netflix                         $15.99) Tj
+0 -18 Td
+(2026-07-10    Spotify                         $10.99) Tj
+0 -18 Td
+(2026-07-15    GitHub                          $20.00) Tj
+0 -18 Td
+(2026-07-20    Notion                          $12.00) Tj
+0 -18 Td
+(2026-07-28    AWS Cloud Services              $29.99) Tj
+0 -18 Td
+(2026-08-05    Netflix                         $15.99) Tj
+0 -18 Td
+(2026-08-10    Spotify                         $10.99) Tj
+0 -18 Td
+(2026-08-15    GitHub                          $20.00) Tj
+0 -18 Td
+(2026-08-20    Notion                          $12.00) Tj
+0 -18 Td
+(2026-08-28    AWS Cloud Services              $29.99) Tj
+0 -18 Td
+(2026-09-05    Netflix                         $15.99) Tj
+0 -18 Td
+(2026-09-10    Spotify                         $10.99) Tj
+ET
+endstream
+endobj
+5 0 obj
+<<
+  /Type /Font
+  /Subtype /Type1
+  /BaseFont /Helvetica
+>>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000266 00000 n 
+0000001068 00000 n 
+trailer
+<<
+  /Size 6
+  /Root 1 0 R
+>>
+startxref
+1147
+%%EOF

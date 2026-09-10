@@ -1,39 +1,10 @@
 const fs = require('fs');
 const path = require('path');
-const csv = require('csv-parser');
 const Transaction = require('../models/Transaction');
 const Subscription = require('../models/Subscription');
 const Suggestion = require('../models/Suggestion');
 const { detectRecurringTransactions } = require('../services/patternDetector');
-
-// Parse CSV helper function
-const parseCSVFile = (filePath) => {
-    return new Promise((resolve, reject) => {
-        const transactions = [];
-        
-        fs.createReadStream(filePath)
-            .pipe(csv())
-            .on('data', (row) => {
-                let date = row.Date || row.date || row['Transaction Date'] || row['Posting Date'];
-                let description = row.Description || row.description || row['Merchant Name'] || row['Payee'];
-                let amount = parseFloat(row.Amount || row.amount || row.Debit || row.Withdrawal);
-                
-                if (amount < 0) amount = Math.abs(amount);
-                
-                if (date && description && amount > 0) {
-                    transactions.push({
-                        date: new Date(date),
-                        merchant: description.trim().substring(0, 100),
-                        amount: amount,
-                        category: 'Uncategorized',
-                        status: 'pending'
-                    });
-                }
-            })
-            .on('end', () => resolve(transactions))
-            .on('error', reject);
-    });
-};
+const { parseStatementFile } = require('../services/csvParser');
 
 // Upload statement endpoint
 exports.uploadStatement = async (req, res) => {
@@ -42,7 +13,8 @@ exports.uploadStatement = async (req, res) => {
             return res.status(400).json({ success: false, message: 'No file uploaded' });
         }
         
-        const transactions = await parseCSVFile(req.file.path);
+        const originalName = req.file.originalname || req.file.filename || '';
+        const transactions = await parseStatementFile(req.file.path, originalName);
         
         // Save transactions to database
         const savedTransactions = [];
@@ -56,6 +28,7 @@ exports.uploadStatement = async (req, res) => {
         
         // Detect subscriptions
         const detected = detectRecurringTransactions(transactions);
+        const isPdf = originalName.toLowerCase().endsWith('.pdf') || req.file.mimetype === 'application/pdf';
         
         // Create suggestions
         for (const sub of detected) {
@@ -69,7 +42,7 @@ exports.uploadStatement = async (req, res) => {
                 await Suggestion.create({
                     userId: req.user.id,
                     type: 'subscription_detected',
-                    source: 'csv',
+                    source: isPdf ? 'pdf' : 'csv',
                     data: sub,
                     status: 'pending'
                 });
@@ -89,6 +62,7 @@ exports.uploadStatement = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
 
 // GET reconciliation stats
 exports.getStats = async (req, res) => {
